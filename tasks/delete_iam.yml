@@ -1,0 +1,24 @@
+- name: Delete a new IAM Group
+  iam:
+    region: "{{ region }}"
+    profile: "{{ aws_account_name }}"
+    iam_type: group
+    name: "{{ item.name }}"
+    state: absent
+  register: iam_group_result
+  with_items: "{{ iam_groups }}"
+  when: item.state == "absent"
+
+- name: Delete a new IAM user
+  iam:
+    region: "{{ region }}"
+    profile: "{{ aws_account_name }}"
+    iam_type: user
+    name: "{{ item.name }}"
+    groups: "{{ item.group|default(omit) }}"
+    state: absent
+    password: "{{ item.password | default(omit) }}"
+    access_key_state: "{{ item.access_key }}"
+  register: iam_user_result
+  with_items: "{{ iam_users }}"
+  when: item.state == "absent"

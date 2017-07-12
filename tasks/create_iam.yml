@@ -1,0 +1,57 @@
+- name: Create a new IAM Group
+  iam:
+    region: "{{ region }}"
+    profile: "{{ aws_account_name }}"
+    iam_type: group
+    name: "{{ item.name }}"
+    state: present
+  register: iam_group_result
+  with_items: "{{ iam_groups }}"
+  when: item.state == "present"
+
+- name: Create a new IAM user
+  iam:
+    region: "{{ region }}"
+    profile: "{{ aws_account_name }}"
+    iam_type: user
+    name: "{{ item.name }}"
+    groups: "{{ item.group|default(omit) }}"
+    state: present
+    password: "{{ item.password | default(omit) }}"
+    access_key_state: "{{ item.access_key }}"
+  register: iam_user_result
+  with_items: "{{ iam_users }}"
+  when: item.state == "present"
+
+# Enforce that a group needs to have a policy file associated.
+- name: Create and attach group policies
+  iam_policy:
+    region: "{{ region }}"
+    profile: "{{ aws_account_name }}"
+    iam_type: group
+    iam_name: "{{ item.name }}"
+    policy_name: "{{ item.name }}"
+    policy_json: "{{ lookup( 'template', '{{inventory_dir}}/../variable_files/iam_policies/{{ item.name }}.json') }}"
+    state: present
+  with_items: "{{ iam_groups }}"
+  when: item.state == "present"
+
+# User may not need the policy file
+- name: Check stat the policy files for iam user
+  stat:
+    path: '{{ inventory_dir }}/../variable_files/iam_policies/{{ item.name }}.json'
+  with_items: "{{ iam_users }}"
+  register: check_user_policy_file_name
+  when: item.state == "present"
+
+- name: Create and attach user policies
+  iam_policy:
+    region: "{{ region }}"
+    profile: "{{ aws_account_name }}"
+    iam_type: user
+    iam_name: "{{ item.name }}"
+    policy_name: "{{ item.name }}"
+    policy_json: "{{ lookup( 'template', '{{inventory_dir}}/../variable_files/iam_policies/{{item.name}}.json') }}"
+    state: present
+  with_items: "{{ check_user_policy_file_name.results }}"
+  when: item.stat.exists
