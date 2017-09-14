@@ -54,7 +54,7 @@
     policy_json: "{{ lookup( 'template', '{{inventory_dir}}/../variable_files/iam_policies/{{item.name}}.json') }}"
     state: present
   with_items: "{{ check_user_policy_file_name.results }}"
-  when: item.stat.exists
+  when: item.stat is defined and item.stat.exists
 
 - name: Create iam roles in the list iam_roles
   iam_role:
@@ -84,4 +84,4 @@
     policy_json: "{{ lookup( 'template', '{{inventory_dir}}/../variable_files/iam_policies/{{item.name}}.json') }}"
     state: present
   with_items: "{{ check_role_policy_file_name.results }}"
-  when: item.stat.exists
+  when: item.stat is defined and item.stat.exists
