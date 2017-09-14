@@ -22,3 +22,12 @@
   register: iam_user_result
   with_items: "{{ iam_users }}"
   when: item.state == "absent"
+
+- name: Delete iam roles in the list iam_roles
+  iam_role:
+    region: "{{ region }}"
+    profile: "{{ aws_account_name }}"
+    name: "{{ item.name }}"
+    state: absent
+  with_items: "{{ iam_roles|default([]) }}"
+  when: item.state == "absent"

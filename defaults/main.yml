@@ -1,5 +1,7 @@
 stage: create
-iam_role_name: "{{ vpc_name }}_{{ role_type }}"
+iam_users: []
+iam_groups: []
+iam_roles: []
 
 # Create iam and group sample data. This should be defined in inventory.
 # Group must have the policy file in variables/iam_policies/<group_name>.json
